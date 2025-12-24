@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+
+/* Shared Inventory */
+int paracetamol = 100;
+int antibiotic = 50;
+int insulin = 30;
+
+/* Mutex Lock */
+pthread_mutex_t lock;
+
+/* Doctor Thread */
+void* doctor(void* arg) {
+    pthread_mutex_lock(&lock);
+    printf("\nDoctor accessing inventory...\n");
+
+    if (paracetamol >= 5) {
+        paracetamol -= 5;
+        printf("Doctor dispensed 5 units of Paracetamol\n");
+    } else {
+        printf("Not enough Paracetamol stock\n");
+    }
+
+    printf("Current Paracetamol Stock: %d\n", paracetamol);
+    pthread_mutex_unlock(&lock);
+
+    sleep(1);
+    return NULL;
+}
+
+/* Nurse Thread */
+void* nurse(void* arg) {
+    pthread_mutex_lock(&lock);
+    printf("\nNurse accessing inventory...\n");
+
+    printf("Antibiotic Stock: %d\n", antibiotic);
+
+    pthread_mutex_unlock(&lock);
+    sleep(1);
+    return NULL;
+}
+
+/* Pharmacist Thread */
+void* pharmacist(void* arg) {
+    pthread_mutex_lock(&lock);
+    printf("\nPharmacist accessing inventory...\n");
+
+    insulin += 10;
+    printf("Pharmacist added 10 units of Insulin\n");
+    printf("Current Insulin Stock: %d\n", insulin);
+
+    pthread_mutex_unlock(&lock);
+    sleep(1);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2, t3;
+
+    pthread_mutex_init(&lock, NULL);
+
+    printf("Hospital Pharmacy Inventory System Started\n");
+
+    pthread_create(&t1, NULL, doctor, NULL);
+    pthread_create(&t2, NULL, nurse, NULL);
+    pthread_create(&t3, NULL, pharmacist, NULL);
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    pthread_join(t3, NULL);
+
+    pthread_mutex_destroy(&lock);
+
+    printf("\nFinal Inventory Status:\n");
+    printf("Paracetamol: %d\n", paracetamol);
+    printf("Antibiotic: %d\n", antibiotic);
+    printf("Insulin: %d\n", insulin);
+
+    return 0;
+}
